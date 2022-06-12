@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+{% load static %}
+
+<html>
+    <head>
+        <link rel="stylesheet" href="{% static "/css/style.css" %}">
+		
+    </head>
+	<body> 
+		{% comment %} <form action=""method="post">{% csrf_token %}
+			<input type="radio" value="2002" name="stock_code">2002<br>
+			<input type="radio" value="2317" name="stock_code">2317<br>
+			<input type="radio" value="2330" name="stock_code">2330<br>
+			<input type="radio" value="2377" name="stock_code">2377<br>
+			<input type="radio" value="2603" name="stock_code">2603<br>
+			<input type="radio" value="2609" name="stock_code">2609<br>
+			<input type="radio" value="2886" name="stock_code">2886<br>
+			<input type="radio" value="3308" name="stock_code">3308<br>
+			<input type="radio" value="3260" name="stock_code">3260<br>
+			<input type="radio" value="6180" name="stock_code">6180<br>
+			輸入查詢年份 : <input type="text" name="stock_time"> <br>
+            <input type="submit"value="送出">
+			<!-- 利用選擇清單選出股票,再利用文字方塊輸入查詢年分 -->
+        </form>
+        <p>個股資訊：{{ stock.info.fullname }}</p>
+        <p>時間：{{ time }}</p>
+		<p>K線圖</p> {% endcomment %}
+
+    <script src="{% static "/js/d3.v4.min.js" %}"></script> <!-- d3.js 數據可視化 -->
+    <script src="{% static "/js/techan.min.js" %}"></script> <!-- d3.js 金融庫 -->
+    {% comment %} <script type="text/javascript" src="{% static "/js/app.js" %}"></script> {% endcomment %}
+	<script>
+		// 設定畫圖的width, height
+		var margin = {top: 20, right: 50, bottom: 30, left: 50},
+					width = 960 - margin.left - margin.right,
+					height = 500 - margin.top - margin.bottom;
+		// 設定parse資料時間的格式
+		var parseDate = d3.timeParse("%Y%m%d");
+		// 使用techan這個framework拉出以時間為基準的x
+		var x = techan.scale.financetime()
+				.range([0, width]);
+		var crosshairY = d3.scaleLinear()
+				.range([height, 0]);
+		// K線圖的y
+		var y = d3.scaleLinear()
+				.range([height - 60, 0]);
+		// 成交量的y
+		var yVolume = d3.scaleLinear()
+				.range([height , height - 60]);
+
+		//設定k線圖
+		var candlestick = techan.plot.candlestick()
+				.xScale(x)
+				.yScale(y);
+
+
+		var volume = techan.plot.volume()
+				.accessor(candlestick.accessor())
+				.xScale(x)
+				.yScale(yVolume);
+
+		var xTopAxis = d3.axisTop(x);
+		var xAxis = d3.axisBottom()
+				.scale(x);
+		var yRightAxis = d3.axisRight(y);
+		var yAxis = d3.axisLeft()
+				.scale(y);
+		var volumeAxis = d3.axisRight(yVolume)
+				.ticks(3)
+				.tickFormat(d3.format(",.3s"));
+		// 設定十字線左右邊要顯示的文字，根據不同的軸線(yAxis, yRightAxis)來決定
+		var ohlcAnnotation = techan.plot.axisannotation()
+				.axis(yAxis)
+				.orient('left')
+				.format(d3.format(',.2f'));
+
+		var ohlcRightAnnotation = techan.plot.axisannotation()
+				.axis(yRightAxis)
+				.orient('right')
+				.translate([width, 0]);
+		// 設定十字線上下顯示的時間
+		var timeAnnotation = techan.plot.axisannotation()
+				.axis(xAxis)
+				.orient('bottom')
+				.format(d3.timeFormat('%Y-%m-%d'))
+				.width(80)
+				.translate([0, height]);
+		// 設定十字線
+		var crosshair = techan.plot.crosshair()
+				.xScale(x)
+				.yScale(crosshairY)
+				.xAnnotation(timeAnnotation)
+				.yAnnotation(ohlcAnnotation)
+		// 設定滑鼠移動過去時要呼叫的function
+				.on("move", move);
+
+		var textSvg = d3.select("body").append("svg")
+                .attr("preserveAspectRatio", "xMinYMin meet")
+                .attr("viewBox", "0 0 960 40")
+                // Class to make it responsive.
+                .classed("svg-content-responsive", true)
+                .append("g")
+                // Fill with a rectangle for visualization.
+                .classed("rect", true)
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", margin.top + margin.bottom)
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		var svgText = textSvg.append("g")
+				.attr("class", "description")
+				.append("text")
+				//.attr("x", margin.left)
+				.attr("y", 6)
+				.attr("dy", ".71em")
+				.style("text-anchor", "start")
+				.text("");
+		//設定畫圖區域
+		var svg = d3.select("body").append("svg")
+        		.attr("preserveAspectRatio", "xMinYMin meet")
+                .attr("viewBox", "0 0 960 500")
+                // Class to make it responsive.
+                .classed("svg-content-responsive", true)
+                .append("g")
+                // Fill with a rectangle for visualization.
+                .classed("rect", true)
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		
+		var dataArr;
+		// 讀取data，畫圖
+		d3.json("{% url "json_data" %}?stock_code={{ code }}&year={{ year }}&month={{ month }}", function(error, data) {
+			var accessor = candlestick.accessor();
+			// var jsonData = data["Data"];
+			
+			data = 
+				data
+				.map(function(d) {
+				return {
+					date: parseDate(d[0]),
+					open: +d[1],
+					high: +d[2],
+					low: +d[3],
+					close: +d[4],
+					volume: +d[6],
+					change: +d[5],
+				};
+			});
+			
+			// 畫candlestick
+			svg.append("g")
+					.attr("class", "candlestick");
+			svg.append("g")
+					.attr("class", "volume");
+			svg.append("g")
+					.attr("class", "volume axis");
+			// 畫x, y軸
+			
+			svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis);
+			
+			svg.append("g")
+					.attr("class", "y axis")
+					.call(yAxis);
+			
+			svg.append('text')
+					.attr("x", 5)
+					.attr("y", 15)
+					.text("{{ stock.info.fullname }}");		
+			
+			// Data to display initially
+			draw(data.slice(0, data.length));
+			// Only want this button to be active if the data has loaded
+			d3.select("button").on("click", function() { draw(data); }).style("display", "inline");
+		});
+
+		function draw(data) {
+		//   console.log(data); 
+			x.domain(data.map(candlestick.accessor().d));
+			y.domain(techan.scale.plot.ohlc(data, candlestick.accessor()).domain());
+			dataArr = data;
+			
+			svg.selectAll("g.x.axis").call(xAxis.ticks(7).tickFormat(d3.timeFormat("%m/%d")).tickSize(-height, -height));
+			svg.selectAll("g.y.axis").call(yAxis.ticks(10).tickSize(-width, -width));
+			yVolume.domain(techan.scale.plot.volume(data).domain());
+			var volumeData = data.map(function(d){return d.volume;});
+			svg.append("g")
+				.attr("class", "crosshair")
+				.call(crosshair)
+			
+			svg.select("g.volume").datum(data)
+				.call(volume);
+			
+			var state = svg.selectAll("g.candlestick").datum(data);
+			state.call(candlestick);
+
+			svg.select("g.volume.axis").call(volumeAxis);
+
+		}
+
+
+		function move(coords) {
+			var i;
+			for (i = 0; i < dataArr.length; i ++) {
+				if (coords.x === dataArr[i].date) {
+					svgText.text(d3.timeFormat("%Y/%m/%d")(coords.x) + ", 開盤：" + dataArr[i].open + ", 高：" + dataArr[i].high + ", 低："+ dataArr[i].low + ", 收盤："+ dataArr[i].close + ", 漲跌：" + dataArr[i].change + ", 成交量： " + dataArr[i].volume);
+				}
+			}
+		}
+	</script>
+    </body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPEhtml>
+    <head>
+        <title> 即時股票查詢系統 </title>
+        <metacharset="UTF-8">
+    </head>
+    <body>
+        <h2>即時股票查詢系統</h2>
+            <form action=""method="post">{% csrf_token %}
+                輸入股票代號 : <input type="text" name="stock_code"> <br>
+                <input type="submit"value="送出">
+            </form>
+            <form action="candlestick/"method="post">{% csrf_token %}
+                輸入年份 : <input type="text" name="year"> <br>
+                輸入月份 : <input type="text" name="month"> <br>
+                <input type="submit"value="送出">
+            </form>
+        
+        {% if stock != NULL %}
+            <ul>
+                <li> 查詢時間 : {{ stock.info.time }}</li>
+                <li> 股票代號 : {{ stock.info.code }}</li>
+                <li> 股票名稱 : {{ stock.info.name }}</li>
+                <li> 股票全名 : {{ stock.info.fullname }}</li>
+                <li> 最佳買入價 : {{ stock.realtime.best_ask_price }}</li>
+                <li> 最佳買入數量 : {{ stock.realtime.best_ask_volume }}</li>
+                <li> 最佳賣出價 : {{ stock.realtime.best_bid_price }}</li>
+                <li> 最佳賣出數量 : {{ stock.realtime.best_bid_volume }}</li>
+                <li> 開盤價 : {{ stock.realtime.open }}</li>
+                <li> 最高價 : {{ stock.realtime.high }}</li>
+                <li> 最低價 : {{ stock.realtime.low }}</li>
+            </ul>
+        {% endif %}
+        </div>
+    </body>
+</html>

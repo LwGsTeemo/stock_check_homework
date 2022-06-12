@@ -1,0 +1,206 @@
+<!DOCTYPE HTML>
+{% load static %}
+<html>
+	<head>
+		<title> 即時股票查詢系統 </title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{% static "/css/main.css" %}" />
+		<link rel="stylesheet" href="{% static "/css/w3.css" %}">
+	    <link rel="stylesheet" href="{% static "/css/rSlider.min.css" %}">
+		<!-- 匯入.css外觀 -->
+		<noscript><link rel="stylesheet" href="{% static "/css/noscript.css" %}" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Sidebar -->
+			<section id="sidebar">
+				<div class="inner">
+					<nav>
+						<ul>
+							<li><a href="#intro">歡迎</a></li>
+							<li><a href="#one">即時股市查詢</a></li>
+							<li><a href="#two">股票歷史資訊走勢查詢</a></li>
+							<li><a href="#three">關於</a></li>
+						</ul>
+					</nav>
+				</div>
+			</section>
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Intro -->
+					<section id="intro" class="wrapper style1 fullscreen fade-up">
+						<div class="inner">
+							<h1>股票資訊查詢系統</h1>
+							<p>程式語言期末專案<br />
+							國立宜蘭大學 資訊工程學系</p>
+							<ul class="actions">
+								<li><a href="#one" class="button scrolly">開始</a></li>
+							</ul>
+						</div>
+					</section>
+
+				<!-- One -->
+					<section id="one" class="wrapper style2 spotlights">
+						<section>
+							<form action="/#one" method="post" class="content" style="display: flex; flex-direction: column; justify-content: center; min-width: 23em">{% csrf_token %}
+								<h2>即時股票查詢系統</h2>
+								<h4>輸入股票代號 : </h4><input type="text" name="stock_code"> <br>
+								<input type="submit" value="送出">
+							</form>
+							<div class="content">
+								<div class="inner">
+									<div class="search_form">
+										<h2>相關資訊</h2>
+										<h3> 查詢時間 : {{ stock.info.time }}</h3>
+										<h3> 股票代號 : {{ stock.info.code }}</h3>
+										<h3> 股票名稱 : {{ stock.info.name }}</h3>
+										<h3> 股票全名 : {{ stock.info.fullname }}</h3>
+									</div>
+								</div>
+							</div>
+						</section>
+						<section style="padding:1px 0 1px 0;">
+								<div class="search_form2">
+									<div class="bar">
+										<h3> 開盤價 : {{ stock.realtime.open }}</h3>
+										<div class="w3-progress-container w3-round-xlarge">
+											<div class="w3-progressbar w3-round-xlarge w3-green" style="width:{{ open_bar }}%"></div>
+										</div>
+									</div>
+									<div class="bar">
+										<h3 style="margin-top: 1.1em;"> 最高價 : {{ stock.realtime.high }}</h3>
+									</div>
+									<div class="bar">
+										<h3 style="margin-top: 1.1em;"> 最低價 : {{ stock.realtime.low }}</h3>
+									</div>
+								</div>
+								<div style="margin:2em;" class="cards">
+									<h3> 最佳買入價 : <br>
+									{%if code == NULL%}&nbsp;{%endif%}
+									{% for best_ask_price in stock.realtime.best_ask_price %} {{best_ask_price}}&nbsp; {% endfor %}</h3>
+									<h3> 最佳買入數量 : <br>
+									{%if code == NULL%}&nbsp;{%endif%}
+									{% for best_ask_volume in stock.realtime.best_ask_volume %} {{best_ask_volume}}&nbsp; {% endfor %}</h3>
+									<h3> 最佳賣出價 : <br>
+									{%if code == NULL%}&nbsp;{%endif%}
+									{% for best_bid_price in stock.realtime.best_bid_price %} {{best_bid_price}}&nbsp; {% endfor %}</h3>
+									<h3> 最佳賣出數量 : <br>
+									{%if code == NULL%}&nbsp;{%endif%}
+									{% for best_bid_volume in stock.realtime.best_bid_volume %} {{best_bid_volume}}&nbsp; {% endfor %}</h3>
+								</div>
+						</section>
+					</section>
+
+				<!-- Two -->
+					<section id="two" style="padding: 3em 2.5em 3em 2.5em;" class="wrapper style3 fade-up">
+						<div style="max-width: 1400px;margin: auto;">
+							<form action="/#two"method="post">{% csrf_token %}
+								<h3>選擇查詢範圍</h3>
+								<div class="slider-container" style="width: 90%; max-width: 1000px; margin: 50px auto 50px;">
+									<input type="text" id="slider" class="slider" name="year"/>
+								</div>
+								<div class="slider-container" style="width: 90%; max-width: 1000px; margin: 0 auto 50px;">
+									<input type="text" id="slider2" class="slider" name="month"/>
+								</div>
+								<div style="min-width: 310px;">
+									<input type="submit" value="2002" name="stock_code">
+									<input type="submit" value="2317" name="stock_code">
+									<input type="submit" value="2330" name="stock_code">
+									<input type="submit" value="2377" name="stock_code">
+									<input type="submit" value="2603" name="stock_code">
+									<input type="submit" value="2609" name="stock_code">
+									<input type="submit" value="2886" name="stock_code">
+									<input type="submit" value="3008" name="stock_code">
+									<input type="submit" value="3260" name="stock_code">
+									<input type="submit" value="6180" name="stock_code">
+								</div>
+							</form>
+							<h4>個股資訊：{{ stock.info.fullname }}</h4>
+							<h4>時間：{{ time }}</h4>
+							<h2>K線圖</h2>
+							
+						</div>
+						<div style="max-width: 964px; margin: auto;">
+							<div style="position: relative; width: 100%; height: 0; padding-bottom: 57.7%;">
+								<iframe id="capture" sandbox="allow-popups allow-scripts allow-forms allow-same-origin" src="{% url 'candlestick' %}?stock_code={{ stock.info.code }}&year={{ year }}&month={{ month }}" marginwidth="0" marginheight="0" style="position: absolute; width: 100%; height: 100%; left: 0; top: 0; background-color:white; border-radius:10px;" scrolling="no"></iframe>
+							</div>
+						</div>
+
+					</section>
+
+				<!-- Three -->
+					<section id="three" class="wrapper style1 fade-up">
+						<div class="inner">
+							<h2>Spring, 2021 期末實作專案-股票查詢系統</h2>
+							<p>指導教授 : 林斯寅 教授</p>
+							<div class="split style1">
+								<section>
+									<form method="post" action="#">
+										<div>
+											<h2>組員:<br></h2>
+											<h3>B0843016 張棋閔</h3>
+											<h3>B0843023 賴濰凱</h3>
+											<h3>B0843020 吳宥俞</h3>
+											<h3>B0843035 張孝全</h3>
+											<h3>B0843039 陳睿澤</h3>
+										</div>
+									</form>
+								</section>
+								<section>
+									<ul class="contact">
+										{% comment %} <li>
+											<h3>Address</h3>
+											<span>12345 Somewhere Road #654<br />
+											Nashville, TN 00000-0000<br />
+											USA</span>
+										</li>
+										<li>
+											<h3>Email</h3>
+											<a href="#">user@untitled.tld</a>
+										</li>
+										<li>
+											<h3>Phone</h3>
+											<span>(000) 000-0000</span>
+										</li>
+										<li>
+											<h3>Social</h3>
+											<ul class="icons">
+												<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+												<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+												<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+												<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+												<li><a href="#" class="icon brands fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+											</ul>
+										</li> {% endcomment %}
+									</ul>
+								</section>
+							</div>
+						</div>
+					</section>
+
+			</div>
+
+		<!-- Footer -->
+			<footer id="footer" class="wrapper style1-alt">
+				<div class="inner">
+					<ul class="menu">
+						<li>&copy; Untitled. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+					</ul>
+				</div>
+			</footer>
+
+		<!-- Scripts -->
+			<script src="{% static "/js/jquery.min.js" %}"></script>
+			<script src="{% static "/js/jquery.scrollex.min.js" %}"></script>
+			<script src="{% static "/js/jquery.scrolly.min.js" %}"></script>
+			<script src="{% static "/js/browser.min.js" %}"></script>
+			<script src="{% static "/js/breakpoints.min.js" %}"></script>
+			<script src="{% static "/js/util.js" %}"></script>
+			<script src="{% static "/js/main.js" %}"></script>
+			<script src="{% static "/js/rSlider.min.js" %}"></script>
+
+	</body>
+</html>
